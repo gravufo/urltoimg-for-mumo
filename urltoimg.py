@@ -73,12 +73,15 @@ class urltoimg(MumoModule):
     #
     
     def userTextMessage(self, server, user, message, current=None):
-        if message.text.startswith(self.keyword):            
-            msg = message.text[len(self.keyword):].strip()
-            link = re.findall(r'href=[\'"]?([^\'" >]+)', msg)
+        # Since we can't send tuple through the .ini file, we hardcode them here
+        keywords = '.jpg"', '.png"', '.gif"', '.tiff"', '.bmp"'
+        if any(s in message.text.lower() for s in keywords):
+            msg = message.text # [len(self.keyword):].strip() DO NOT STRIP THE MESSAGE, it strips too much, apparently
+            link = re.findall('href=[\'\"]?([^\'\" >]+)', msg)
             img = urllib.urlopen(link[0])
             size = int(img.info().getheaders("Content-Length")[0])/1024
-            if size < 256:
+            # Limit size to 2 MB
+            if size < 2048:
                 encoded = base64.b64encode(img.read())
                 msg = '<img src="data:image/jpeg;charset=utf-8;base64,' + str(encoded) + '"/>'
                 self.sendMessage(server, user, message, msg)
@@ -87,6 +90,7 @@ class urltoimg(MumoModule):
                 msg = "image too large to post."
                 self.sendMessage(server, user, message, msg)
             return
+
 
 
             
